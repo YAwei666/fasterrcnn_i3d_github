@@ -66,7 +66,7 @@ if __name__ == '__main__':
     #     '/home/wbr/cqq/faster-rcnn_endernewton/output/default/voc_2007_trainval/default'
     #     '/res101_faster_rcnn_iter_1070000/detections.pkl',
     #     'rb')
-
+    print(11)
     all_boxes=pickle.load(file)
     num_images=len(all_boxes[1])
     for i in range(num_images):
