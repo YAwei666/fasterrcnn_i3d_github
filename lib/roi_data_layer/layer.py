@@ -60,8 +60,8 @@ class RoIDataLayer(object):
     if self._random:
       np.random.set_state(st0)
       
-    # self._cur = 0
-    self._cur = 13
+    self._cur = 0
+    # self._cur = 13
 
   def _get_next_minibatch_inds(self):
     """Return the roidb indices for the next minibatch."""

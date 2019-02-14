@@ -58,6 +58,30 @@ def parse_args():
     args = parser.parse_args()
     return args
 
+def combined_roidb(imdb_names):
+    """
+    Combine multiple roidbs
+    """
+
+    def get_roidb(imdb_name):
+        imdb = get_imdb(imdb_name)
+        print('Loaded dataset `{:s}` for training'.format(imdb.name))
+        imdb.set_proposal_method(cfg.TRAIN.PROPOSAL_METHOD)
+        print('Set proposal method: {:s}'.format(cfg.TRAIN.PROPOSAL_METHOD))
+        roidb = get_training_roidb(imdb)
+        return roidb
+
+    roidbs = [get_roidb(s) for s in imdb_names.split('+')]
+    roidb = roidbs[0]
+    if len(roidbs) > 1:
+        for r in roidbs[1:]:
+            roidb.extend(r)
+        tmp = get_imdb(imdb_names.split('+')[1])
+        imdb = datasets.imdb.imdb(imdb_names, tmp.classes)
+    else:
+        imdb = get_imdb(imdb_names)
+    return imdb, roidb
+
 
 if __name__ == '__main__':
     os.environ['CUDA_VISIBLE_DEVICES'] = '7'
@@ -65,8 +89,8 @@ if __name__ == '__main__':
     args = parse_args()
     args.imdb='voc_2007_test'
     # args.model='../output/vgg16/voc_2007_trainval/default/vgg16_faster_rcnn_iter_70000.ckpt'
-    args.model='/home/wbr/cqq/faster-rcnn_endernewton/output/default/voc_2007_trainval/v0.4/' \
-               'res101_faster_rcnn_iter_1080000.ckpt'
+    args.model='/home/wbr/cqq/faster-rcnn_endernewton/output/default/voc_2007_trainval/v0.2.3/' \
+               'res101_faster_rcnn_iter_10000.ckpt'
     args.cfg='../experiments/cfgs/vgg16.yml'
     args.net='vgg16'
     args.set='NCHOR_SCALES [8,16,32] ANCHOR_RATIOS [0.5,1,2]'
@@ -91,6 +115,8 @@ if __name__ == '__main__':
     tag = args.tag
     tag = tag if tag else 'default'
     filename = tag + '/' + filename
+
+    imdb, roidb = combined_roidb(args.imdb_name)
 
     imdb = get_imdb(args.imdb_name)
     imdb.competition_mode(args.comp_mode)

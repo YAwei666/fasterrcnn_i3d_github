@@ -63,7 +63,7 @@ class i3d(Network):
         self._scope = 'vgg_16'
 
     def _image_to_head(self, is_training, reuse=None):
-        self._final_endpoint=0
+        self._final_endpoint = 0
         with tf.variable_scope(self._scope, self._scope, reuse=reuse):
 
             net = self._image
@@ -300,10 +300,11 @@ class i3d(Network):
                 self._layers['I3D_feature'] = net
                 print(self._layers)
                 print(net.shape)
-                net=tf.slice(net,[0,0,0,0,0],[-1,1,-1,-1,-1])
+                # net=tf.slice(net,[0,0,0,0,0],[-1,1,-1,-1,-1])
+                net = tf.slice(net, [0, 2, 0, 0, 0], [-1, 1, -1, -1, -1])
             end_points[end_point] = net
             print(net.shape)
-            net=tf.squeeze(net,axis=[1])
+            net = tf.squeeze(net, axis=[1])
             print(net.shape)
         self._act_summaries.append(net)
         self._layers['head'] = net
@@ -327,8 +328,8 @@ class i3d(Network):
     def _head_to_tail(self, pool5, is_training, reuse=None):
         with tf.variable_scope(self._scope, self._scope, reuse=reuse):
             end_point = 'MaxPool3d_5a_2x2'
-            end_points={}
-            net=pool5
+            end_points = {}
+            net = pool5
             net = tf.nn.max_pool3d(net, ksize=[1, 2, 2, 2, 1], strides=[1, 2, 2, 2, 1],
                                    padding=snt.SAME, name=end_point)
             end_points[end_point] = net
@@ -389,8 +390,8 @@ class i3d(Network):
                 net = tf.concat([branch_0, branch_1, branch_2, branch_3], 4)
 
             pool5_flat = slim.flatten(net, scope='flatten')
-            self.print_tensor_infomation(pool5_flat,'pool5_flat')
-            #TODO 增加从49000到25000的全连接层
+            self.print_tensor_infomation(pool5_flat, 'pool5_flat')
+            # TODO 增加从49000到25000的全连接层
             # fc5 = slim.fully_connected(pool5_flat, 10000, scope='fc5')
             # fc6 = slim.fully_connected(fc5, 4096, scope='fc6')
             fc6 = slim.fully_connected(pool5_flat, 4096, scope='fc6')
@@ -404,21 +405,20 @@ class i3d(Network):
 
         return fc7
 
-
     def get_variables_to_restore(self, variables, var_keep_dic):
         variables_to_restore = {}
 
         for v in variables:
             # exclude the conv weights that are fc weights in vgg16
-            v_name='/'.join(v.name.split('/')[1:])
-            v_name=v_name.replace(':0','')
-            v_name='RGB/inception_i3d/'+v_name
+            v_name = '/'.join(v.name.split('/')[1:])
+            v_name = v_name.replace(':0', '')
+            v_name = 'RGB/inception_i3d/' + v_name
             if v_name in var_keep_dic:
                 if 'ixed_3c/Branch_0/Conv3d_0a_1x1/batch_norm/moving_variance' in v_name:
                     print(v.shape)
                 print(v.name)
                 print(v_name)
-                variables_to_restore[v_name]=v
+                variables_to_restore[v_name] = v
 
         return variables_to_restore
 

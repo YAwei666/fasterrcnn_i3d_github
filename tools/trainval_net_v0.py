@@ -91,13 +91,14 @@ if __name__ == '__main__':
     # os.environ["CUDA_VISIBLE_DEVICES"] = '3'
 
     args = parse_args()
-    os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+    os.environ['CUDA_VISIBLE_DEVICES'] = '7'
     args.imdb = 'voc_2007_trainval'
     args.imdbval='voc_2007_test'
     args.weight='data/imagenet_weights/vgg16.ckpt'
     args.cfg='experiments/cfgs/vgg16.yml'
     args.max_iters=70000
-    args.tag='v0.2.2'
+    # args.tag='v0.2.3'
+    args.tag='v0.2.5'
     args.net = 'vgg16'
     args.set = 'NCHOR_SCALES [8,16,32] ANCHOR_RATIOS [0.5,1,2] TRAIN.STEPSIZE [50000]'
     print('Called with args:')
@@ -148,6 +149,9 @@ if __name__ == '__main__':
         raise NotImplementedError
     print(output_dir)
 
+    roidb=roidb[:10]
+    # for item in roidb:
+    #     print(item['flipped'])
     #test
     train_net(net, imdb, roidb, valroidb, output_dir, tb_dir,
               pretrained_model=args.weight,
