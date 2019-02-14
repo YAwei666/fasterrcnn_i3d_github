@@ -27,6 +27,7 @@ def parse_args():
     """
     Parse input arguments
     """
+
     parser = argparse.ArgumentParser(description='Test a Fast R-CNN network')
     parser.add_argument('--cfg', dest='cfg_file',
                         help='optional config file', default=None, type=str)
