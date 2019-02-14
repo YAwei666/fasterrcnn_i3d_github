@@ -1,0 +1,26 @@
+#模型信息
+is_online: 0
+model_version: "faster_i3d_v1"
+model_path: "/home/wbr/code/pingan/model/{}"
+log_path: "/home/wbr/code/pingan/log/{}"
+gpu_num: "7"
+#数据集信息
+frame_num: 30
+data_version: v1.0
+train_data_path: "/home/wbr/code/pingan/dataset/data_{}.pick"
+extra_train_data_path: "/home/wbr/code/pingan/dataset/extra_data_{}.pick"
+embedding_path: "/home/wbr/code/pingan/dataset/embedding_{}.pick"
+#初始化模型
+I3D_model: "/home/wbr/cqq/I3D/data/checkpoints/rgb_imagenet/model.ckpt"
+#模型参数
+batch_size:  1000
+layer_num:  1
+lstm_size:  300
+decay_rate: 0.8
+decay_steps: 10000
+embedding_size:  500
+learning_rate:  0.001
+keep_prob:  0.5
+max_sentence_length:  20
+max_to_keep: 5
+char_or_word: char
