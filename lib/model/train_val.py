@@ -217,6 +217,35 @@ class SolverWrapper(object):
 
         return rate, last_snapshot_iter, stepsizes, np_paths, ss_paths
 
+
+    def load_model(self, sess):
+        # Initial file lists are empty
+
+        np_paths = []
+        ss_paths = []
+        # Fresh train directly from ImageNet weights
+        # print('Loading initial model weights from {:s}'.format(self.config.I3D_model))
+        variables = tf.global_variables()
+
+        # Initialize all variables first
+        sess.run(tf.variables_initializer(variables, name='init'))
+        restorer = tf.train.Saver()
+        print('load_model')
+        path='/home/wbr/cqq/faster-rcnn_endernewton/output/default/voc_2007_trainval/v0.2.5/res101_faster_rcnn_iter_10000.ckpt'
+        restorer.restore(sess,path)
+        # print('Loaded.')
+        # Need to fix the variables before loading, so that the RGB weights are changed to BGR
+        # For VGG16 it also changes the convolutional weights fc6 and fc7 to
+        # fully connected weights
+        # self.net.fix_variables(sess, self.pretrained_model)
+        # print('Fixed.')
+        last_snapshot_iter = 0
+        rate = cfg.TRAIN.LEARNING_RATE
+        stepsizes = list(cfg.TRAIN.STEPSIZE)
+
+        return rate, last_snapshot_iter, stepsizes, np_paths, ss_paths
+
+
     def initialize_variables(self, sess):
         # Initial file lists are empty
 
@@ -345,8 +374,9 @@ class SolverWrapper(object):
         lsf = 0
         if lsf == 0:
             #所有模型使用完全初始化的参数
-            # rate, last_snapshot_iter, stepsizes, np_paths, ss_paths = self.initialize_variables(sess)
-            rate, last_snapshot_iter, stepsizes, np_paths, ss_paths = self.initialize_from_i3d(sess)
+            rate, last_snapshot_iter, stepsizes, np_paths, ss_paths = self.initialize_variables(sess)
+            # rate, last_snapshot_iter, stepsizes, np_paths, ss_paths = self.initialize_from_i3d(sess)
+            # rate, last_snapshot_iter, stepsizes, np_paths, ss_paths = self.load_model(sess)
             # rate, last_snapshot_iter, stepsizes, np_paths, ss_paths = self.initialize(sess)
         else:
             rate, last_snapshot_iter, stepsizes, np_paths, ss_paths = self.restore(sess,
@@ -460,8 +490,8 @@ def train_net(network, imdb, roidb, valroidb, output_dir, tb_dir,
               pretrained_model=None,
               max_iters=40000):
     """Train a Faster R-CNN network."""
-    roidb = filter_roidb(roidb)
-    valroidb = filter_roidb(valroidb)
+    # roidb = filter_roidb(roidb)
+    # valroidb = filter_roidb(valroidb)
 
     tfconfig = tf.ConfigProto(allow_soft_placement=True)
     tfconfig.gpu_options.allow_growth = True

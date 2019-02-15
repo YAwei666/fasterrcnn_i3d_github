@@ -252,7 +252,8 @@ class Network(object):
             initializer = tf.random_normal_initializer(mean=0.0, stddev=0.01)
             initializer_bbox = tf.random_normal_initializer(mean=0.0, stddev=0.001)
 
-        net_conv = self._image_to_head(is_training)
+        # net_conv = self._image_to_head(is_training)
+        net_conv = self._image_to_head(True)
         with tf.variable_scope(self._scope, self._scope):
             # build the anchors for the image
             self._anchor_component()
@@ -453,6 +454,7 @@ class Network(object):
                        biases_regularizer=biases_regularizer,
                        biases_initializer=tf.constant_initializer(0.0)):
             rois, cls_prob, bbox_pred = self._build_network(training)
+            # rois, cls_prob, bbox_pred = self._build_network(True)
 
         layers_to_output = {'rois': rois}
 
@@ -461,10 +463,12 @@ class Network(object):
 
         # TODO 去掉像素平均值
         if testing:
+            # self._add_losses()
             stds = np.tile(np.array(cfg.TRAIN.BBOX_NORMALIZE_STDS), (self._num_classes))
             means = np.tile(np.array(cfg.TRAIN.BBOX_NORMALIZE_MEANS), (self._num_classes))
             self._predictions["bbox_pred"] *= stds
             self._predictions["bbox_pred"] += means
+            # pass
         else:
             self._add_losses()
             layers_to_output.update(self._losses)
@@ -506,19 +510,21 @@ class Network(object):
         feed_dict = {self._image: image,
                      self._im_info: im_info}
 
-        from tensorflow.python import debug as tfdbg
-        sess = tfdbg.LocalCLIDebugWrapperSession(sess)
+        # sess = tfdbg.LocalCLIDebugWrapperSession(sess)
 
-        cls_score, cls_prob, bbox_pred, rois, item = sess.run([self._predictions["cls_score"],
-                                                               self._predictions['cls_prob'],
-                                                               self._predictions['bbox_pred'],
-                                                               self._predictions['rois'],
-                                                               self._layers['I3D_feature']
-                                                               ],
-                                                              feed_dict=feed_dict)
-
-        item=np.squeeze(item)
-        item=np.mean(item,axis=3)
+        cls_score, cls_prob, bbox_pred, rois, item, rpn_prob, rpn_cls, rpn_bbox = \
+            sess.run([self._predictions["cls_score"],
+                      self._predictions['cls_prob'],
+                      self._predictions['bbox_pred'],
+                      self._predictions['rois'],
+                      self._layers['I3D_feature'],
+                      self._predictions["rpn_cls_prob"],
+                      self._predictions["rpn_cls_pred"],
+                      self._predictions["rpn_bbox_pred"],
+                      ],
+                     feed_dict=feed_dict)
+        item = np.squeeze(item)
+        item = np.mean(item, axis=3)
 
         return cls_score, cls_prob, bbox_pred, rois
 
@@ -540,6 +546,53 @@ class Network(object):
                                                                             self._losses['total_loss'],
                                                                             train_op],
                                                                            feed_dict=feed_dict)
+
+        cls_score, cls_prob, bbox_pred, rois, item, rpn_prob, rpn_cls, rpn_bbox = \
+            sess.run([self._predictions["cls_score"],
+                      self._predictions['cls_prob'],
+                      self._predictions['bbox_pred'],
+                      self._predictions['rois'],
+                      self._layers['I3D_feature'],
+                      self._predictions["rpn_cls_prob"],
+                      self._predictions["rpn_cls_pred"],
+                      self._predictions["rpn_bbox_pred"],
+                      ],
+                     feed_dict=feed_dict)
+        width = blobs['im_info'][0] / blobs['im_info'][2]
+        height = blobs['im_info'][1] / blobs['im_info'][2]
+        boxes = rois[:, 1:5] / blobs['im_info'][2]
+        scores = np.reshape(cls_prob, [cls_prob.shape[0], -1])
+        bbox_pred = np.reshape(bbox_pred, [bbox_pred.shape[0], -1])
+        shape = [width, height]
+        if cfg.TEST.BBOX_REG:
+            # Apply bounding-box regression deltas
+            box_deltas = bbox_pred
+            from lib.model.bbox_transform import bbox_transform_inv
+            def _clip_boxes(boxes, im_shape):
+                """Clip boxes to image boundaries."""
+                # x1 >= 0
+                boxes[:, 0::4] = np.maximum(boxes[:, 0::4], 0)
+                # y1 >= 0
+                boxes[:, 1::4] = np.maximum(boxes[:, 1::4], 0)
+                # x2 < im_shape[1]
+                boxes[:, 2::4] = np.minimum(boxes[:, 2::4], im_shape[1] - 1)
+                # y2 < im_shape[0]
+                boxes[:, 3::4] = np.minimum(boxes[:, 3::4], im_shape[0] - 1)
+                return boxes
+
+            pred_boxes = bbox_transform_inv(boxes, box_deltas)
+            pred_boxes = _clip_boxes(pred_boxes, shape)
+
+        # import pickle
+        # print('存放')
+        # file = open('/home/wbr/cqq/faster-rcnn_endernewton/train_result.pkl', 'wb')
+        # pickle.dump(scores, file)
+        # pickle.dump(pred_boxes, file)
+        # file.close()
+
+        item = np.squeeze(item)
+        item = np.mean(item, axis=3)
+
         # profile result
         return rpn_loss_cls, rpn_loss_box, loss_cls, loss_box, loss
 

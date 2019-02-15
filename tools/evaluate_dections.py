@@ -24,7 +24,7 @@ from model.config import cfg, cfg_from_file, cfg_from_list
 from nets.mobilenet_v1 import mobilenetv1
 from nets.resnet_v1 import resnetv1
 from nets.vgg16 import vgg16
-
+from tools.trainval_net_v0 import combined_roidb
 
 def parse_args():
     """
@@ -119,9 +119,34 @@ def analyse_voc_data():
     print(max(shape1))
     print(min(shape1))
 
+def demo():
+    import numpy as np
+    import pickle
+    path='/home/wbr/cqq/faster-rcnn_endernewton/output/default/voc_2007_test/default/res101_faster_rcnn_iter_10000/detections_1.pkl'
+    file=open(path,'rb')
+    all_boxes=pickle.load(file)
+
+    bbox = [item[0] for item in all_boxes]
+    for item in bbox:
+        if len(item) == 0:
+            continue
+        for j, box in enumerate(item):
+            print(box[4 ])
+            if box[4] > 0.3:
+                if (box[2] - box[0]) > 10 and (box[3] - box[1]) > 10:
+                    img = cv2.imread('/home/wbr/cqq/faster-rcnn_endernewton/data/VOCdevkit2007/VOC2007/JPEGImages/000005.jpg')
+                    cv2.rectangle(img, (box[0], box[1]), (box[2], box[3]), (0, 255, 0), 2)
+                    # cv2.imshow('image', img)
+                    # cv2.waitKey(0)
+                    # cv2.destroyAllWindows()
+                    cv2.imwrite('/home/wbr/cqq/faster-rcnn_endernewton/pic/1_{}.jpg'.format(j), img)
+
+
+
 
 if __name__ == '__main__':
-    visilize()
-
-
+    # visilize()
+    demo()
+    # a='sss'=='sss'
+    # print(a)
     # analyse_voc_data()

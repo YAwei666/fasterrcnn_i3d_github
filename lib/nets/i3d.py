@@ -29,6 +29,7 @@ class Unit3D(snt.AbstractModule):
         self._kernel_shape = kernel_shape
         self._stride = stride
         self._use_batch_norm = use_batch_norm
+        # self._use_batch_norm = False
         self._activation_fn = activation_fn
         self._use_bias = use_bias
 

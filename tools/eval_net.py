@@ -84,12 +84,12 @@ def combined_roidb(imdb_names):
 
 
 if __name__ == '__main__':
-    os.environ['CUDA_VISIBLE_DEVICES'] = '7'
+    os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
     args = parse_args()
     args.imdb='voc_2007_test'
     # args.model='../output/vgg16/voc_2007_trainval/default/vgg16_faster_rcnn_iter_70000.ckpt'
-    args.model='/home/wbr/cqq/faster-rcnn_endernewton/output/default/voc_2007_trainval/v0.2.3/' \
+    args.model='/home/wbr/cqq/faster-rcnn_endernewton/output/default/voc_2007_trainval/v0.2.5/' \
                'res101_faster_rcnn_iter_10000.ckpt'
     args.cfg='../experiments/cfgs/vgg16.yml'
     args.net='vgg16'
@@ -116,7 +116,7 @@ if __name__ == '__main__':
     tag = tag if tag else 'default'
     filename = tag + '/' + filename
 
-    imdb, roidb = combined_roidb(args.imdb_name)
+    # imdb, roidb = combined_roidb(args.imdb_name)
 
     imdb = get_imdb(args.imdb_name)
     imdb.competition_mode(args.comp_mode)
@@ -126,10 +126,12 @@ if __name__ == '__main__':
 
     # init session
     sess = tf.Session(config=tfconfig)
-    # load network
-    net = vgg16()
+    # load_train_data network
+    from nets.i3d import i3d
+    #TODO 改模型
+    net = i3d()
 
-    # load model
+    # load_train_data model
     net.create_architecture("TEST", imdb.num_classes, tag='default',
                             anchor_scales=cfg.ANCHOR_SCALES,
                             anchor_ratios=cfg.ANCHOR_RATIOS)
